@@ -38,7 +38,7 @@ var ColorFinder = /** @class */ (function () {
         }
         return nearestPixel;
     };
-    ColorFinder.prototype._toScaledPos = function (px, py, layout) {
+    ColorFinder.prototype._toDisplayPos = function (px, py, layout) {
         var xScale = this.canvas.width === 0 ? 0 : layout.width / this.canvas.width;
         var yScale = this.canvas.height === 0 ? 0 : layout.height / this.canvas.height;
         var dx = px * xScale;
@@ -71,11 +71,11 @@ var ColorFinder = /** @class */ (function () {
     };
     ColorFinder.prototype.colorAtPos = function (x, y, layout) {
         var _a = this._toImgPos(x, y, layout), px = _a.x, py = _a.y;
-        return this.pixels[x][y];
+        return this.pixels[px][py];
     };
     ColorFinder.prototype.locateColor = function (color, layout) {
         var _a = this._nearestPixel(color), px = _a.x, py = _a.y;
-        return this._toScaledPos(px, py, layout);
+        return this._toDisplayPos(px, py, layout);
     };
     return ColorFinder;
 }());

@@ -58,12 +58,12 @@ class ColorFinder {
         return nearestPixel;
     }
 
-    _toScaledPos (px: number, py: number, layout: Layout): Pos {
-        const xScale = this.canvas.width === 0 ? 0 : layout.width / this.canvas.width
-        const yScale = this.canvas.height === 0 ? 0 : layout.height / this.canvas.height
-        const dx = px * xScale
-        const dy = py * yScale
-        return { x: dx, y: dy }
+    _toDisplayPos (px: number, py: number, layout: Layout): Pos {
+        const xScale = this.canvas.width === 0 ? 0 : layout.width / this.canvas.width;
+        const yScale = this.canvas.height === 0 ? 0 : layout.height / this.canvas.height;
+        const dx = px * xScale;
+        const dy = py * yScale;
+        return { x: dx, y: dy };
     }
 
     _toHex (r: number, g: number, b: number): string {
@@ -71,11 +71,11 @@ class ColorFinder {
     }
 
     _toImgPos (dx: number, dy: number, layout: Layout): Pos {
-        const xScale = this.canvas.width === 0 ? 0 : layout.width / this.canvas.width
-        const yScale = this.canvas.height === 0 ? 0 : layout.height / this.canvas.height
-        const px = xScale === 0 ? 0 : (dx - layout.left) / xScale
-        const py = yScale === 0 ? 0 : (dy - layout.top) / yScale
-        return { x: px, y: py }
+        const xScale = this.canvas.width === 0 ? 0 : layout.width / this.canvas.width;
+        const yScale = this.canvas.height === 0 ? 0 : layout.height / this.canvas.height;
+        const px = xScale === 0 ? 0 : (dx - layout.left) / xScale;
+        const py = yScale === 0 ? 0 : (dy - layout.top) / yScale;
+        return { x: px, y: py };
     }
 
     _toRGB (hex: string): RGB {
@@ -96,12 +96,12 @@ class ColorFinder {
 
     colorAtPos (x: number, y: number, layout: Layout): string {
         const { x: px, y: py } = this._toImgPos(x, y, layout);
-        return this.pixels[x][y];
+        return this.pixels[px][py];
     }
 
     locateColor (color: string, layout: Layout): Pos {
         const { x: px, y: py } = this._nearestPixel(color);
-        return this._toScaledPos(px, py, layout);
+        return this._toDisplayPos(px, py, layout);
     }
 }
 
