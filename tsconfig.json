@@ -1,4 +1,7 @@
 {
+    "include": [
+        "index.ts"
+    ],
     "compilerOptions": {
         "esModuleInterop": true
     }

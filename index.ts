@@ -16,13 +16,13 @@ class ColorFinder {
 
     src: string;
     canvas: Canvas;
-    maxColors: number = 5;
+    mainColors: string[];
     pixels: string[][];
 
-    constructor (src: string, canvas: Canvas, maxColors: number) {
+    constructor (src: string, canvas: Canvas, mainColors: string[]) {
         this.src = src;
         this.canvas = canvas;
-        this.maxColors = maxColors;
+        this.mainColors = mainColors;
 
         this.pixels = [];
         const context = this.canvas.getContext('2d');
@@ -103,10 +103,19 @@ class ColorFinder {
         const { x: px, y: py } = this._nearestPixel(color);
         return this._toScaledPos(px, py, layout);
     }
+}
 
-    mainColors (): Promise<string[]> {
-        return Vibrant.from(this.src)
-        .maxColorCount(this.maxColors)
+const createColorFinder = (src: string, maxColors: number = 5): Promise<ColorFinder> => {
+    const canvas = loadImage(src)
+        .then(image => {
+            const canvas = createCanvas(image.width, image.height);
+            const context = canvas.getContext('2d');
+            context.drawImage(image, 0, 0);
+            return canvas;
+        })
+
+    const mainColors = Vibrant.from(src)
+        .maxColorCount(maxColors)
         .getSwatches()
         .then(swatches => {
             const colors: string[] = [];
@@ -115,17 +124,11 @@ class ColorFinder {
             }
             return colors;
         })
-    }
-}
 
-const createColorFinder = (src: string, maxColors: number = 5): Promise<ColorFinder> => {
-    return loadImage(src)
-    .then(image => {
-        const canvas = createCanvas(image.width, image.height);
-        const context = canvas.getContext('2d');
-        context.drawImage(image, 0, 0);
-        return new ColorFinder(src, canvas, maxColors);
-    })
+    return Promise.all([canvas, mainColors])
+        .then(([canvas, mainColors]) => {
+            return new ColorFinder(src, canvas, mainColors);
+        })
 }
 
 

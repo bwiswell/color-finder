@@ -3,11 +3,10 @@ exports.__esModule = true;
 var canvas_1 = require("canvas");
 var node_vibrant_1 = require("node-vibrant");
 var ColorFinder = /** @class */ (function () {
-    function ColorFinder(src, canvas, maxColors) {
-        this.maxColors = 5;
+    function ColorFinder(src, canvas, mainColors) {
         this.src = src;
         this.canvas = canvas;
-        this.maxColors = maxColors;
+        this.mainColors = mainColors;
         this.pixels = [];
         var context = this.canvas.getContext('2d');
         var x, y, imageData, hex;
@@ -78,28 +77,31 @@ var ColorFinder = /** @class */ (function () {
         var _a = this._nearestPixel(color), px = _a.x, py = _a.y;
         return this._toScaledPos(px, py, layout);
     };
-    ColorFinder.prototype.mainColors = function () {
-        return node_vibrant_1["default"].from(this.src)
-            .maxColorCount(this.maxColors)
-            .getSwatches()
-            .then(function (swatches) {
-            var colors = [];
-            for (var swatch in swatches) {
-                colors.push(swatches[swatch].hex);
-            }
-            return colors;
-        });
-    };
     return ColorFinder;
 }());
 var createColorFinder = function (src, maxColors) {
     if (maxColors === void 0) { maxColors = 5; }
-    return canvas_1.loadImage(src)
+    var canvas = canvas_1.loadImage(src)
         .then(function (image) {
         var canvas = canvas_1.createCanvas(image.width, image.height);
         var context = canvas.getContext('2d');
         context.drawImage(image, 0, 0);
-        return new ColorFinder(src, canvas, maxColors);
+        return canvas;
+    });
+    var mainColors = node_vibrant_1["default"].from(src)
+        .maxColorCount(maxColors)
+        .getSwatches()
+        .then(function (swatches) {
+        var colors = [];
+        for (var swatch in swatches) {
+            colors.push(swatches[swatch].hex);
+        }
+        return colors;
+    });
+    return Promise.all([canvas, mainColors])
+        .then(function (_a) {
+        var canvas = _a[0], mainColors = _a[1];
+        return new ColorFinder(src, canvas, mainColors);
     });
 };
 exports.ColorFinder = ColorFinder;
