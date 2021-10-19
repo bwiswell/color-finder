@@ -1,0 +1,19 @@
+{
+  "name": "color-finder",
+  "version": "1.0.0",
+  "description": "simple package to extract prominent colors, get the location of a color in an image, and get the color at a specific pixel",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Ben Wiswell",
+  "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bwiswell/color-finder.git"
+  },
+  "dependencies": {
+    "canvas": "^2.8.0",
+    "node-vibrant": "^3.2.1-alpha.1"
+  }
+}
