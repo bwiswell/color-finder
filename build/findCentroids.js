@@ -34,7 +34,7 @@ var findCentroids = function (colors, nCentroids) {
                 }
             }
             if (assigned.length !== 0) {
-                var centroid = centroids[j], newCentroid = new Array(3), k = void 0, sum = void 0;
+                var centroid = centroids[i], newCentroid = new Array(3), k = void 0, sum = void 0;
                 for (j = 0; j < 3; j++) {
                     sum = 0;
                     for (k = 0; k < assigned.length; k++) {

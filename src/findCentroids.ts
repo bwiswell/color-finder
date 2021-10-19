@@ -35,7 +35,7 @@ const findCentroids = (colors: number[][], nCentroids: number): number[][] => {
             }
          }
          if (assigned.length !== 0) {
-            let centroid = centroids[j], newCentroid: number[] = new Array(3), k: number, sum: number;
+            let centroid = centroids[i], newCentroid: number[] = new Array(3), k: number, sum: number;
             for (j = 0; j < 3; j++) {
                sum = 0;
                for (k = 0; k < assigned.length; k++) {
