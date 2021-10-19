@@ -1,8 +1,9 @@
 {
     "include": [
-        "index.ts"
+        "src/**/*"
     ],
     "compilerOptions": {
-        "esModuleInterop": true
+        "esModuleInterop": true,
+        "outDir": "./build"
     }
 }
