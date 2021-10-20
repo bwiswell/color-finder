@@ -16,6 +16,11 @@ export const rgbDist = (a: number[], b: number[]): number => {
     return Math.sqrt(rDiff ** 2 + gDiff ** 2 + bDiff ** 2);
 }
 
+const componentToHex = (comp: number): string => {
+    const hex = comp.toString(16);
+    return hex.length == 1 ? "0" + hex : hex;
+  }
+  
 export const rgbToHex = (rgb: number[]): string => {
-    return ((rgb[0] << 16) | (rgb[1] << 8) | rgb[2]).toString(16).slice(-6);
+    return "#" + componentToHex(rgb[0]) + componentToHex(rgb[1]) + componentToHex(rgb[2]);
 }

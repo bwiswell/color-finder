@@ -18,7 +18,11 @@ var ColorFinder = /** @class */ (function () {
             var hexCol = [];
             for (y = 0; y < this.canvas.height; y++) {
                 imageData = context.getImageData(x, y, 1, 1);
-                rgb = [imageData[0], imageData[1], imageData[2]];
+                rgb = [
+                    imageData.data[0],
+                    imageData.data[1],
+                    imageData.data[2]
+                ];
                 rgbCol.push(rgb);
                 hex = util_1.rgbToHex(rgb);
                 hexCol.push(hex);
@@ -36,7 +40,7 @@ var ColorFinder = /** @class */ (function () {
                 flatColors.push(this.rgb[x][y]);
             }
         }
-        var centroids = findCentroids_1["default"](flatColors, maxColors);
+        var centroids = findCentroids_1["default"](flatColors, maxColors * 2, maxColors, 100);
         var mainColors = [];
         for (var i = 0; i < centroids.length; i++) {
             mainColors.push(util_1.rgbToHex([
@@ -63,27 +67,46 @@ var ColorFinder = /** @class */ (function () {
         }
         return nearestPixel;
     };
-    ColorFinder.prototype._toDisplayPos = function (px, py, layout) {
+    ColorFinder.prototype._toImgPos = function (sx, sy, layout) {
+        var xScale = this.canvas.width === 0 ? 0 : layout.width / this.canvas.width;
+        var yScale = this.canvas.height === 0 ? 0 : layout.height / this.canvas.height;
+        var px, py;
+        if (xScale === 0 || yScale === 0) {
+            px = 0;
+            py = 0;
+        }
+        else {
+            px = Math.min(this.canvas.width - 1, Math.max(0, Math.round(sx / xScale)));
+            py = Math.min(this.canvas.height - 1, Math.max(0, Math.round(sy / yScale)));
+        }
+        return { x: px, y: py };
+    };
+    ColorFinder.prototype._toPagePos = function (px, py, layout) {
+        var _a = this._toScaledPos(px, py, layout), x = _a.x, y = _a.y;
+        return { x: x + layout.x, y: y + layout.y };
+    };
+    ColorFinder.prototype._toScaledPos = function (px, py, layout) {
         var xScale = this.canvas.width === 0 ? 0 : layout.width / this.canvas.width;
         var yScale = this.canvas.height === 0 ? 0 : layout.height / this.canvas.height;
         var dx = px * xScale;
         var dy = py * yScale;
         return { x: dx, y: dy };
     };
-    ColorFinder.prototype._toImgPos = function (dx, dy, layout) {
-        var xScale = this.canvas.width === 0 ? 0 : layout.width / this.canvas.width;
-        var yScale = this.canvas.height === 0 ? 0 : layout.height / this.canvas.height;
-        var px = xScale === 0 ? 0 : (dx - layout.left) / xScale;
-        var py = yScale === 0 ? 0 : (dy - layout.top) / yScale;
-        return { x: px, y: py };
-    };
     ColorFinder.prototype.colorAtPos = function (x, y, layout) {
         var _a = this._toImgPos(x, y, layout), px = _a.x, py = _a.y;
         return this.hex[px][py];
     };
+    ColorFinder.prototype.colorAtPagePos = function (x, y, layout) {
+        var _a = this._toImgPos(x - layout.x, y - layout.y, layout), px = _a.x, py = _a.y;
+        return this.hex[px][py];
+    };
     ColorFinder.prototype.locateColor = function (color, layout) {
-        var _a = this._nearestPixel(color), px = _a.x, py = _a.y;
-        return this._toDisplayPos(px, py, layout);
+        var _a = this._nearestPixel(color), x = _a.x, y = _a.y;
+        return this._toScaledPos(x, y, layout);
+    };
+    ColorFinder.prototype.locateColorOnPage = function (color, layout) {
+        var _a = this._nearestPixel(color), x = _a.x, y = _a.y;
+        return this._toPagePos(x, y, layout);
     };
     return ColorFinder;
 }());

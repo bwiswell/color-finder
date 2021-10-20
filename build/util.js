@@ -19,7 +19,11 @@ var rgbDist = function (a, b) {
     return Math.sqrt(Math.pow(rDiff, 2) + Math.pow(gDiff, 2) + Math.pow(bDiff, 2));
 };
 exports.rgbDist = rgbDist;
+var componentToHex = function (comp) {
+    var hex = comp.toString(16);
+    return hex.length == 1 ? "0" + hex : hex;
+};
 var rgbToHex = function (rgb) {
-    return ((rgb[0] << 16) | (rgb[1] << 8) | rgb[2]).toString(16).slice(-6);
+    return "#" + componentToHex(rgb[0]) + componentToHex(rgb[1]) + componentToHex(rgb[2]);
 };
 exports.rgbToHex = rgbToHex;
