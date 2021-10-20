@@ -7,6 +7,7 @@ var findCentroids_1 = __importDefault(require("./findCentroids"));
 var util_1 = require("./util");
 var ColorFinder = /** @class */ (function () {
     function ColorFinder(pixelData) {
+        this.mainColors = this._mainColors.bind(this);
         if (!pixelData.rgb && !pixelData.hex) {
             throw new Error('Invalid pixel data');
         }
@@ -66,7 +67,7 @@ var ColorFinder = /** @class */ (function () {
         var _a = this._nearestPixel(color), x = _a.x, y = _a.y;
         return this._toPagePos(x, y, layout);
     };
-    ColorFinder.prototype.mainColors = function (maxColors) {
+    ColorFinder.prototype._mainColors = function (maxColors) {
         if (maxColors === void 0) { maxColors = 5; }
         var flatColors = [];
         var x, y;
@@ -75,7 +76,7 @@ var ColorFinder = /** @class */ (function () {
                 flatColors.push(this.rgb[x][y]);
             }
         }
-        var centroids = findCentroids_1["default"](flatColors, maxColors * 2, maxColors, 100);
+        var centroids = findCentroids_1["default"](flatColors, maxColors, maxColors, 100);
         var mainColors = [];
         for (var i = 0; i < centroids.length; i++) {
             mainColors.push(util_1.rgbToHex([

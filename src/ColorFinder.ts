@@ -88,7 +88,7 @@ class ColorFinder {
         return this._toPagePos(x, y, layout);
     }
 
-    mainColors (maxColors: number = 5): string[] {
+    _mainColors (maxColors: number = 5): string[] {
         const flatColors: number[][] = [];
         let x, y;
         for (x = 0; x < this.width; x++) {
@@ -98,7 +98,7 @@ class ColorFinder {
         }
         const centroids = findCentroids(
             flatColors, 
-            maxColors * 2,
+            maxColors,
             maxColors,
             100
         );
@@ -112,6 +112,8 @@ class ColorFinder {
         }
         return mainColors;
     }
+
+    mainColors = this._mainColors.bind(this);
 
     _nearestPixel (color: string): Pos {
         const rgb = hexToRGB(color);
