@@ -2,7 +2,7 @@ import { createCanvas, loadImage } from 'canvas';
 import type { Canvas } from 'canvas';
 
 import findCentroids from './findCentroids';
-import { hexToRGB, rgbDist, rgbToHex } from './util';
+import { hexToRGB, hexArrToRGB, rgbDist, rgbToHex, rgbArrToHex } from './util';
 
 type Layout = {
     x: number,
@@ -10,25 +10,39 @@ type Layout = {
     width: number,
     height: number
 };
+type PixelData = { rgb?: number[][][], hex?: string[][] };
 type Pos = { x: number, y: number };
-
 class ColorFinder {
 
-    canvas: Canvas;
     rgb: number[][][];
     hex: string[][];
-    mainColors: string[];
+    width: number;
+    height: number;
 
-    constructor (canvas: Canvas, maxColors: number = 5) {
-        this.canvas = canvas;
-        this.rgb = [];
-        this.hex = [];
-        const context = this.canvas.getContext('2d');
-        let x, y, imageData: ImageData, rgb: number[], hex: string;
-        for (x = 0; x < this.canvas.width; x++) {
+    constructor (pixelData: PixelData) {
+        if (!pixelData.rgb && !pixelData.hex) {
+            throw new Error('Invalid pixel data');
+        } else if (pixelData.rgb && pixelData.hex) {
+            this.rgb = pixelData.rgb;
+            this.hex = pixelData.hex;
+        } else if (pixelData.rgb) {
+            this.rgb = pixelData.rgb;
+            this.hex = rgbArrToHex(this.rgb);
+        } else {
+            this.hex = pixelData.hex;
+            this.rgb = hexArrToRGB(this.hex);
+        }
+        this.width = this.rgb.length;
+        this.height = this.rgb[0].length;    
+    }
+
+    static fromCanvas (canvas: Canvas): ColorFinder {
+        const rgbArr: number[][][] = [];
+        const context = canvas.getContext('2d');
+        let x, y, imageData: ImageData, rgb: number[];
+        for (x = 0; x < canvas.width; x++) {
             const rgbCol: number[][] = [];
-            const hexCol: string[] = []
-            for (y = 0; y < this.canvas.height; y++) {
+            for (y = 0; y < canvas.height; y++) {
                 imageData = context.getImageData(x, y, 1, 1);
                 rgb = [
                     imageData.data[0],
@@ -36,21 +50,49 @@ class ColorFinder {
                     imageData.data[2]
                 ];
                 rgbCol.push(rgb);
-                hex = rgbToHex(rgb);
-                hexCol.push(hex);
             }
-            this.rgb.push(rgbCol);
-            this.hex.push(hexCol);
+            rgbArr.push(rgbCol);
         }
-
-        this.mainColors = this._mainColors(maxColors);
+        return new ColorFinder({ rgb: rgbArr });
     }
 
-    _mainColors (maxColors: number): string[] {
+    static fromHexArray (hexArr: string[][]) {
+        return new ColorFinder({ hex: hexArr });
+    }
+
+    static fromRGBArray (rgbArr: number[][][]) {
+        return new ColorFinder({ rgb: rgbArr });
+    }
+
+    colorAtPos (x: number, y: number, layout: Layout): string {
+        const { x: px, y: py } = this._toImgPos(x, y, layout);
+        return this.hex[px][py];
+    }
+
+    colorAtPagePos (x: number, y: number, layout: Layout): string {
+        const { x: px, y: py } = this._toImgPos(
+            x - layout.x, 
+            y - layout.y, 
+            layout
+        );
+        return this.hex[px][py];
+    }
+
+    locateColor (color: string, layout: Layout): Pos {
+        const { x, y } = this._nearestPixel(color);
+        return this._toScaledPos(x, y, layout);
+    }
+
+    locateColorOnPage (color: string, layout: Layout): Pos {
+        const { x, y } = this._nearestPixel(color);
+        return this._toPagePos(x, y, layout);
+    }
+
+    mainColors (maxColors: number = 5): string[] {
         const flatColors: number[][] = [];
         let x, y;
-        for (x = 0; x < this.canvas.width; x++) {
-            for (y = 0; y < this.canvas.height; y++) {
+        for (x = 0; x < this.width; x++) {
+            for (y = 0; y < this.height; y++) {
                 flatColors.push(this.rgb[x][y]);
             }
         }
@@ -76,8 +118,8 @@ class ColorFinder {
         let minDist = 10000;
         let nearestPixel = { x: 0, y: 0 };
         let x, y, dist;
-        for (x = 0; x < this.canvas.width; x++) {
-            for (y = 0; y < this.canvas.height; y++) {
+        for (x = 0; x < this.width; x++) {
+            for (y = 0; y < this.height; y++) {
                 dist = rgbDist(rgb, this.rgb[x][y]);
                 if (dist < minDist) {
                     minDist = dist;
@@ -89,21 +131,21 @@ class ColorFinder {
     }
 
     _toImgPos (sx: number, sy: number, layout: Layout): Pos {
-        const xScale = this.canvas.width === 0 ? 0 : layout.width / this.canvas.width;
-        const yScale = this.canvas.height === 0 ? 0 : layout.height / this.canvas.height;
+        const xScale = this.width === 0 ? 0 : layout.width / this.width;
+        const yScale = this.height === 0 ? 0 : layout.height / this.height;
         let px, py;
         if (xScale === 0 || yScale === 0) {
             px = 0;
             py = 0;
         } else {
             px = Math.min(
-                this.canvas.width - 1, 
+                this.width - 1, 
                 Math.max(
                     0,
                     Math.round(sx / xScale)
                 ));
             py = Math.min(
-                this.canvas.height - 1, 
+                this.height - 1, 
                 Math.max(
                     0,
                     Math.round(sy / yScale)
@@ -118,35 +160,11 @@ class ColorFinder {
     }
 
     _toScaledPos (px: number, py: number, layout: Layout): Pos {
-        const xScale = this.canvas.width === 0 ? 0 : layout.width / this.canvas.width;
-        const yScale = this.canvas.height === 0 ? 0 : layout.height / this.canvas.height;
+        const xScale = this.width === 0 ? 0 : layout.width / this.width;
+        const yScale = this.height === 0 ? 0 : layout.height / this.height;
         const dx = px * xScale;
         const dy = py * yScale;
         return { x: dx, y: dy };
-    }
-
-    colorAtPos (x: number, y: number, layout: Layout): string {
-        const { x: px, y: py } = this._toImgPos(x, y, layout);
-        return this.hex[px][py];
-    }
-
-    colorAtPagePos (x: number, y: number, layout: Layout): string {
-        const { x: px, y: py } = this._toImgPos(
-            x - layout.x, 
-            y - layout.y, 
-            layout
-        );
-        return this.hex[px][py];
-    }
-
-    locateColor (color: string, layout: Layout): Pos {
-        const { x, y } = this._nearestPixel(color);
-        return this._toScaledPos(x, y, layout);
-    }
-
-    locateColorOnPage (color: string, layout: Layout): Pos {
-        const { x, y } = this._nearestPixel(color);
-        return this._toPagePos(x, y, layout);
     }
 }
 

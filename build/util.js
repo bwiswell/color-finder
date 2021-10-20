@@ -1,6 +1,6 @@
 "use strict";
 exports.__esModule = true;
-exports.rgbToHex = exports.rgbDist = exports.hexToRGB = void 0;
+exports.rgbArrToHex = exports.rgbToHex = exports.rgbDist = exports.hexArrToRGB = exports.hexToRGB = void 0;
 var hexToRGB = function (hex) {
     var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
     return result ? [
@@ -10,6 +10,16 @@ var hexToRGB = function (hex) {
     ] : null;
 };
 exports.hexToRGB = hexToRGB;
+var hexArrToRGB = function (hexArr) {
+    var rgbArr = [];
+    hexArr.forEach(function (hexCol) {
+        var rgbCol = [];
+        hexCol.forEach(function (hex) { return rgbCol.push(exports.hexToRGB(hex)); });
+        rgbArr.push(rgbCol);
+    });
+    return rgbArr;
+};
+exports.hexArrToRGB = hexArrToRGB;
 var rgbDist = function (a, b) {
     var ar = a[0], ag = a[1], ab = a[2];
     var br = b[0], bg = b[1], bb = b[2];
@@ -27,3 +37,13 @@ var rgbToHex = function (rgb) {
     return "#" + componentToHex(rgb[0]) + componentToHex(rgb[1]) + componentToHex(rgb[2]);
 };
 exports.rgbToHex = rgbToHex;
+var rgbArrToHex = function (rgbArr) {
+    var hexArr = [];
+    rgbArr.forEach(function (rgbCol) {
+        var hexCol = [];
+        rgbCol.forEach(function (rgb) { return hexCol.push(exports.rgbToHex(rgb)); });
+        hexArr.push(hexCol);
+    });
+    return hexArr;
+};
+exports.rgbArrToHex = rgbArrToHex;

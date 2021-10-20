@@ -18,6 +18,14 @@ const nearestCentroid = (color: number[], centroids: number[][]): number => {
    return minIndex;
 }
 
+const meanSquaredError = (centroid: number[], assigned: number[][]): number => {
+   let sum = 0;
+   assigned.forEach(color => {
+      sum += rgbDist(centroid, color);
+   });
+   return assigned.length > 0 ? sum / assigned.length : 0;
+}
+
 const findCentroids = (
       colors: number[][],
       nClusters: number, 
@@ -34,21 +42,14 @@ const findCentroids = (
       }
       done = true;
       for (i = 0; i < nClusters; i++) {
-         assigned = [];
-         for (j = 0; j < colors.length; j++) {
-            if (assignments[j] == i) {
-               assigned.push(colors[j]);
-            }
-         }
+         assigned = colors.filter((_c, colIdx) => assignments[colIdx] === i);
          if (assigned.length !== 0) {
-            let centroid = centroids[i], newCentroid: number[] = new Array(3), k: number, sum: number;
+            let centroid = centroids[i];
+            let newCentroid: number[] = new Array(3), sum: number;
             for (j = 0; j < 3; j++) {
                sum = 0;
-               for (k = 0; k < assigned.length; k++) {
-                  sum += assigned[k][j];
-               }
+               assigned.forEach(color => sum += color[j]);
                newCentroid[j] = sum / assigned.length;
-
                if (newCentroid[j] != centroid[j]) {
                   done = false;
                }
@@ -59,14 +60,15 @@ const findCentroids = (
       iterations++;
    }
 
-   const decorate: { centroid: number[], clusterSize: number }[] = [];
-   centroids.forEach((centroid, index) => {
+   const decorate: { centroid: number[], mse: number }[] = [];
+   centroids.forEach((centroid, centI) => {
+      const assigned = colors.filter((color, colI) => assignments[colI] === centI);
       decorate.push({ 
          centroid: centroid, 
-         clusterSize: assigned[index].length 
+         mse: meanSquaredError(centroid, assigned)
       })
    });
-   decorate.sort((a, b) => b.clusterSize - a.clusterSize);
+   decorate.sort((a, b) => a.mse - b.mse);
    const undecorate: number[][] = [];
    decorate.slice(0, nBest).forEach(value => undecorate.push(value.centroid));
    undecorate.map(centroid => colors[nearestCentroid(centroid, colors)])

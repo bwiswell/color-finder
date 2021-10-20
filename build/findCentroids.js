@@ -17,6 +17,13 @@ var nearestCentroid = function (color, centroids) {
     }
     return minIndex;
 };
+var meanSquaredError = function (centroid, assigned) {
+    var sum = 0;
+    assigned.forEach(function (color) {
+        sum += util_1.rgbDist(centroid, color);
+    });
+    return assigned.length > 0 ? sum / assigned.length : 0;
+};
 var findCentroids = function (colors, nClusters, nBest, maxIterations) {
     if (maxIterations === void 0) { maxIterations = 100; }
     var centroids = initCentroids(colors, nClusters);
@@ -28,38 +35,36 @@ var findCentroids = function (colors, nClusters, nBest, maxIterations) {
             assignments[i] = nearestCentroid(colors[i], centroids);
         }
         done = true;
-        for (i = 0; i < nClusters; i++) {
-            assigned = [];
-            for (j = 0; j < colors.length; j++) {
-                if (assignments[j] == i) {
-                    assigned.push(colors[j]);
-                }
-            }
+        var _loop_1 = function () {
+            assigned = colors.filter(function (_c, colIdx) { return assignments[colIdx] === i; });
             if (assigned.length !== 0) {
-                var centroid = centroids[i], newCentroid = new Array(3), k = void 0, sum = void 0;
+                var centroid = centroids[i];
+                var newCentroid = new Array(3), sum_1;
                 for (j = 0; j < 3; j++) {
-                    sum = 0;
-                    for (k = 0; k < assigned.length; k++) {
-                        sum += assigned[k][j];
-                    }
-                    newCentroid[j] = sum / assigned.length;
+                    sum_1 = 0;
+                    assigned.forEach(function (color) { return sum_1 += color[j]; });
+                    newCentroid[j] = sum_1 / assigned.length;
                     if (newCentroid[j] != centroid[j]) {
                         done = false;
                     }
                 }
                 centroids[i] = newCentroid;
             }
+        };
+        for (i = 0; i < nClusters; i++) {
+            _loop_1();
         }
         iterations++;
     }
     var decorate = [];
-    centroids.forEach(function (centroid, index) {
+    centroids.forEach(function (centroid, centI) {
+        var assigned = colors.filter(function (color, colI) { return assignments[colI] === centI; });
         decorate.push({
             centroid: centroid,
-            clusterSize: assigned[index].length
+            mse: meanSquaredError(centroid, assigned)
         });
     });
-    decorate.sort(function (a, b) { return b.clusterSize - a.clusterSize; });
+    decorate.sort(function (a, b) { return a.mse - b.mse; });
     var undecorate = [];
     decorate.slice(0, nBest).forEach(function (value) { return undecorate.push(value.centroid); });
     undecorate.map(function (centroid) { return colors[nearestCentroid(centroid, colors)]; });
