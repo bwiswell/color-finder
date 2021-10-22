@@ -1,6 +1,6 @@
 {
   "name": "color-finder",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "simple package to extract prominent colors, get the location of a color in an image, and get the color at a specific pixel",
   "main": "build/ColorFinder.js",
   "scripts": {
